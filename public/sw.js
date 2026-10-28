@@ -1,10 +1,11 @@
-// S.A.C. Desk PWA Service Worker - Clean Registration & Cache Purge (v4)
-const CACHE_NAME = 'sac-desk-pwa-v4';
+// S.A.C. Desk PWA Service Worker - Clean Registration & Cache Purge (v5)
+const CACHE_NAME = 'sac-desk-pwa-v5';
 const CACHE_PREFIX = 'sac-desk-pwa';
 
 const PRECACHE_ASSETS = [
   './',
   './index.html',
+  './index.html?v=3',
   './manifest.json',
   './sac-logo.svg',
   './icon-192.png',
@@ -74,10 +75,10 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Always prefer fresh manifest.json from network so Chrome/Android immediately sees updated id "/SAC-Desk/v2"
+  // Always prefer fresh manifest.json from network so Chrome/Android immediately sees updated id "/SAC-Desk/app-v3"
   if (url.pathname.endsWith('/manifest.json')) {
     event.respondWith(
-      fetch(event.request, { cache: 'no-cache' })
+      fetch(event.request, { cache: 'reload' })
         .then((networkRes) => {
           if (networkRes && networkRes.status === 200) {
             const clone = networkRes.clone();
@@ -141,13 +142,18 @@ self.addEventListener('fetch', (event) => {
         return networkResponse;
       })
       .catch(async () => {
-        const cachedResponse = await caches.match(event.request);
+        const cachedResponse =
+          (await caches.match(event.request)) ||
+          (await caches.match(event.request, { ignoreSearch: true }));
         if (cachedResponse) {
           return cachedResponse;
         }
 
         if (event.request.mode === 'navigate' || event.request.destination === 'document') {
-          const fallback = (await caches.match('./index.html')) || (await caches.match('./'));
+          const fallback =
+            (await caches.match('./index.html?v=3')) ||
+            (await caches.match('./index.html')) ||
+            (await caches.match('./'));
           if (fallback) {
             return fallback;
           }

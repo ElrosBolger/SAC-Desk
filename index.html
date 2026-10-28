@@ -157,17 +157,19 @@
               .catch(() => {
                 if (icon192 && icon512) {
                   const fallbackManifest = {
-                    id: '/SAC-Desk/v2',
+                    id: '/SAC-Desk/app-v3',
                     name: 'S.A.C. Desk - Airport Security',
                     short_name: 'SAC Desk',
-                    start_url: new URL('./index.html', window.location.href).href,
+                    start_url: new URL('./index.html?v=3', window.location.href).href,
                     scope: new URL('./', window.location.href).href,
                     display: 'standalone',
                     background_color: '#0f172a',
                     theme_color: '#0f172a',
                     icons: [
-                      { src: icon192, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
-                      { src: icon512, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+                      { src: icon192, sizes: '192x192', type: 'image/png', purpose: 'any' },
+                      { src: icon512, sizes: '512x512', type: 'image/png', purpose: 'any' },
+                      { src: icon192, sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+                      { src: icon512, sizes: '512x512', type: 'image/png', purpose: 'maskable' }
                     ]
                   };
                   const blob = new Blob([JSON.stringify(fallbackManifest)], { type: 'application/manifest+json' });
@@ -178,25 +180,24 @@
           });
       });
 
-      // Pulizia preventiva client-side delle cache precedenti a sac-desk-pwa-v4
+      // Pulizia preventiva client-side delle cache precedenti a sac-desk-pwa-v5
       if ('caches' in window) {
         caches.keys().then((keys) => {
           keys.forEach((key) => {
-            if (key.startsWith('sac-desk-pwa') && key !== 'sac-desk-pwa-v4') {
+            if (key.startsWith('sac-desk-pwa') && key !== 'sac-desk-pwa-v5') {
               caches.delete(key);
             }
           });
         }).catch(() => {});
       }
 
-      // Re-registrazione forzata Service Worker ('./sw.js', scope './', updateViaCache: 'none')
+      // Force Unregister di tutti i Service Worker esistenti sul dominio prima di registrare il nuovo ./sw.js (v5)
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
+        const registerFreshServiceWorker = () => {
           navigator.serviceWorker.register('./sw.js', { scope: './', updateViaCache: 'none' })
             .then((registration) => {
-              console.log('S.A.C. Desk PWA Service Worker v4 registrato con successo, scope:', registration.scope);
+              console.log('S.A.C. Desk PWA Service Worker v5 registrato con successo, scope:', registration.scope);
 
-              // Forza controllo immediato di eventuali aggiornamenti del Service Worker
               registration.update().catch(() => {});
 
               if (registration.waiting) {
@@ -208,7 +209,7 @@
                 if (installingWorker) {
                   installingWorker.addEventListener('statechange', () => {
                     if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                      console.log('Nuova versione S.A.C. Desk v4 pronta: attivazione immediata.');
+                      console.log('Nuova versione S.A.C. Desk v5 pronta: attivazione immediata.');
                       installingWorker.postMessage({ type: 'SKIP_WAITING' });
                     }
                   });
@@ -217,6 +218,27 @@
             })
             .catch((err) => {
               console.warn('Avviso registrazione Service Worker S.A.C. Desk:', err);
+            });
+        };
+
+        window.addEventListener('load', () => {
+          if (navigator.onLine === false) {
+            registerFreshServiceWorker();
+            return;
+          }
+          navigator.serviceWorker.getRegistrations()
+            .then(function(registrations) {
+              const unregisterPromises = [];
+              for (let registration of registrations) {
+                unregisterPromises.push(registration.unregister());
+              }
+              return Promise.allSettled(unregisterPromises);
+            })
+            .then(() => {
+              registerFreshServiceWorker();
+            })
+            .catch(() => {
+              registerFreshServiceWorker();
             });
         });
       }
@@ -11357,12 +11379,12 @@ Disposizioni operative del Programma Nazionale di Sicurezza (PNS ENAC) e discipl
     }
     window.addEventListener('resize', adjustChatForVisualViewport);
 
-    // Smart PWA Standalone & Install Detection
+    // Smart PWA Standalone & Install Detection (isolated for /SAC-Desk/app-v3)
     function isAppInstalledOrStandalone() {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
                            window.navigator.standalone === true ||
                            document.referrer.includes('android-app://') ||
-                           safeGetItem('SAC_PWA_INSTALLED') === 'true';
+                           safeGetItem('SAC_PWA_INSTALLED_V3') === 'true';
       return isStandalone;
     }
 
@@ -11483,7 +11505,7 @@ Disposizioni operative del Programma Nazionale di Sicurezza (PNS ENAC) e discipl
         AppState.pwaDeferredPrompt.prompt();
         AppState.pwaDeferredPrompt.userChoice.then((choiceResult) => {
           if (choiceResult.outcome === 'accepted') {
-            safeSetItem('SAC_PWA_INSTALLED', 'true');
+            safeSetItem('SAC_PWA_INSTALLED_V3', 'true');
           }
           AppState.pwaDeferredPrompt = null;
           renderApp();
@@ -11494,10 +11516,10 @@ Disposizioni operative del Programma Nazionale di Sicurezza (PNS ENAC) e discipl
       }
     };
 
-    // Capture PWA Install Prompt (nuovo ID /SAC-Desk/v2 forza nuova installabilità pulita)
+    // Capture PWA Install Prompt (nuovo ID /SAC-Desk/app-v3 forza nuova generazione WebAPK pulita)
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
-      safeSetItem('SAC_PWA_INSTALLED', 'false');
+      safeSetItem('SAC_PWA_INSTALLED_V3', 'false');
       AppState.pwaDeferredPrompt = e;
       renderApp();
     });
@@ -11505,7 +11527,7 @@ Disposizioni operative del Programma Nazionale di Sicurezza (PNS ENAC) e discipl
     // When app is installed, dismiss install button permanently
     window.addEventListener('appinstalled', () => {
       AppState.pwaDeferredPrompt = null;
-      safeSetItem('SAC_PWA_INSTALLED', 'true');
+      safeSetItem('SAC_PWA_INSTALLED_V3', 'true');
       renderApp();
     });
 
