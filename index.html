@@ -13,15 +13,16 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="SAC Desk">
 
-  <!-- PWA Web App Manifest -->
-  <link rel="manifest" href="/manifest.json">
+  <!-- PWA Web App Manifest (Relative path for GitHub Pages /SAC-Desk/ & Root) -->
+  <link id="pwa-manifest-link" rel="manifest" href="./manifest.json">
 
-  <!-- PWA Icons & Favicon Links -->
-  <link rel="icon" type="image/svg+xml" href="/sac-logo.svg">
-  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
-  <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <!-- PWA Icons & Favicon Links (Relative paths) -->
+  <link id="pwa-svg-icon" rel="icon" type="image/svg+xml" href="./sac-logo.svg">
+  <link id="pwa-png-192" rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+  <link id="pwa-png-512" rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
+  <link id="pwa-favicon" rel="icon" type="image/png" sizes="64x64" href="./favicon.png">
+  <link id="pwa-apple-icon-180" rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+  <link id="pwa-apple-icon" rel="apple-touch-icon" href="./apple-touch-icon.png">
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -68,33 +69,139 @@
       .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
     </style>
-  <!-- PWA Service Worker Registration -->
+  <!-- PWA Embedded Aviation Icon Fallback & Service Worker Registration -->
   <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js', { scope: '/' })
-          .then((registration) => {
-            console.log('S.A.C. Desk PWA Service Worker registrato con successo, scope:', registration.scope);
+    (function initPwaIconsAndSw() {
+      // Generatore nativo embedded dello stemma azzurro aviazione S.A.C. Desk (192x192 / 512x512)
+      function drawSacEmblemPng(size) {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return null;
 
-            // Verifica aggiornamenti in background senza bloccare l'interfaccia
-            registration.addEventListener('updatefound', () => {
-              const installingWorker = registration.installing;
-              if (installingWorker) {
-                installingWorker.addEventListener('statechange', () => {
-                  if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    console.log('Nuova versione S.A.C. Desk pronta in background.');
-                    // Invia istruzione di skip waiting non bloccante
-                    installingWorker.postMessage({ type: 'SKIP_WAITING' });
-                  }
-                });
-              }
-            });
+          // Sfondo istituzionale #0f172a (safe-zone any maskable)
+          ctx.fillStyle = '#0f172a';
+          ctx.fillRect(0, 0, size, size);
+
+          const scale = (size / 512) * 0.82;
+          const offset = (size * (1 - 0.82)) / 2;
+
+          ctx.save();
+          ctx.translate(offset, offset);
+          ctx.scale(scale, scale);
+
+          // Anello esterno luminoso
+          ctx.beginPath();
+          ctx.arc(256, 256, 242, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(56, 189, 248, 0.28)';
+          ctx.fill();
+
+          // Clip circolare stemma aviazione
+          ctx.beginPath();
+          ctx.arc(256, 256, 236, 0, Math.PI * 2);
+          ctx.clip();
+
+          // Cielo azzurro aviazione
+          ctx.fillStyle = '#24a8e0';
+          ctx.fillRect(0, 0, 512, 512);
+
+          // Onda blu navy inferiore
+          const navyWave = new Path2D('M 50 330 C 130 380, 200 440, 290 445 C 360 450, 410 415, 460 350 L 512 512 L 0 512 Z');
+          ctx.fillStyle = '#1b287d';
+          ctx.fill(navyWave);
+
+          // Silhouette velivolo e scia aerodinamica bianca
+          const planePath = new Path2D('M 64 345 C 118 375, 178 372, 230 350 C 270 332, 295 315, 310 295 L 346 398 C 353 410, 368 402, 362 390 L 348 285 L 426 182 C 434 172, 428 162, 416 166 L 326 250 L 182 232 C 170 230, 168 244, 178 250 L 278 288 C 230 330, 150 366, 64 345 Z');
+          ctx.fillStyle = '#ffffff';
+          ctx.fill(planePath);
+
+          ctx.restore();
+          return canvas.toDataURL('image/png');
+        } catch (e) {
+          return null;
+        }
+      }
+      window.generateEmbeddedSacIcon = drawSacEmblemPng;
+
+      // Verifica non bloccante icone/manifest statici con fallback embedded automatico
+      window.addEventListener('DOMContentLoaded', () => {
+        fetch('./icon-192.png', { method: 'HEAD' })
+          .then((res) => {
+            if (!res.ok) throw new Error('Icon 404');
           })
-          .catch((err) => {
-            console.warn('Avviso registrazione Service Worker S.A.C. Desk:', err);
+          .catch(() => {
+            const icon192 = drawSacEmblemPng(192);
+            const icon512 = drawSacEmblemPng(512);
+            const icon180 = drawSacEmblemPng(180);
+            if (icon192) {
+              const l192 = document.getElementById('pwa-png-192');
+              if (l192) l192.href = icon192;
+            }
+            if (icon512) {
+              const l512 = document.getElementById('pwa-png-512');
+              if (l512) l512.href = icon512;
+            }
+            if (icon180) {
+              const a1 = document.getElementById('pwa-apple-icon-180');
+              const a2 = document.getElementById('pwa-apple-icon');
+              if (a1) a1.href = icon180;
+              if (a2) a2.href = icon180;
+            }
+            // Se anche manifest.json non fosse raggiungibile, genera manifest embedded di emergenza
+            fetch('./manifest.json', { method: 'HEAD' })
+              .then((mRes) => {
+                if (!mRes.ok) throw new Error('Manifest 404');
+              })
+              .catch(() => {
+                if (icon192 && icon512) {
+                  const fallbackManifest = {
+                    name: 'S.A.C. Desk - Airport Security',
+                    short_name: 'SAC Desk',
+                    start_url: window.location.href.split('#')[0],
+                    scope: new URL('./', window.location.href).href,
+                    display: 'standalone',
+                    background_color: '#0f172a',
+                    theme_color: '#0f172a',
+                    icons: [
+                      { src: icon192, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+                      { src: icon512, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+                    ]
+                  };
+                  const blob = new Blob([JSON.stringify(fallbackManifest)], { type: 'application/manifest+json' });
+                  const mLink = document.getElementById('pwa-manifest-link');
+                  if (mLink) mLink.href = URL.createObjectURL(blob);
+                }
+              });
           });
       });
-    }
+
+      // Registrazione Service Worker con percorso e scope RELATIVI ('./sw.js', './') per GitHub Pages (/SAC-Desk/) e Root
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js', { scope: './' })
+            .then((registration) => {
+              console.log('S.A.C. Desk PWA Service Worker registrato con successo, scope:', registration.scope);
+
+              registration.addEventListener('updatefound', () => {
+                const installingWorker = registration.installing;
+                if (installingWorker) {
+                  installingWorker.addEventListener('statechange', () => {
+                    if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                      console.log('Nuova versione S.A.C. Desk pronta in background.');
+                      installingWorker.postMessage({ type: 'SKIP_WAITING' });
+                    }
+                  });
+                }
+              });
+            })
+            .catch((err) => {
+              console.warn('Avviso registrazione Service Worker S.A.C. Desk:', err);
+            });
+        });
+      }
+    })();
   </script>
 </head>
 <body class="h-full flex flex-col bg-[#0b1329] text-slate-100 font-sans selection:bg-sky-500 selection:text-white">
@@ -114,7 +221,7 @@
   <div id="modal-container"></div>
 
   <!-- APPLICATION CORE SCRIPT -->
-  <script type="module" src="/src/firebase.js"></script>
+  <script type="module" src="./src/firebase.js"></script>
   <script>
     /* -------------------------------------------------------------
        GLOBAL NOTIFICATIONS & TOAST SYSTEM (BOTTOM POSITIONED & AUTO-CLOSE)
