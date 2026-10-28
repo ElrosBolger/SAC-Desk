@@ -157,9 +157,10 @@
               .catch(() => {
                 if (icon192 && icon512) {
                   const fallbackManifest = {
+                    id: '/SAC-Desk/v2',
                     name: 'S.A.C. Desk - Airport Security',
                     short_name: 'SAC Desk',
-                    start_url: window.location.href.split('#')[0],
+                    start_url: new URL('./index.html', window.location.href).href,
                     scope: new URL('./', window.location.href).href,
                     display: 'standalone',
                     background_color: '#0f172a',
@@ -177,19 +178,37 @@
           });
       });
 
-      // Registrazione Service Worker con percorso e scope RELATIVI ('./sw.js', './') per GitHub Pages (/SAC-Desk/) e Root
+      // Pulizia preventiva client-side delle cache precedenti a sac-desk-pwa-v4
+      if ('caches' in window) {
+        caches.keys().then((keys) => {
+          keys.forEach((key) => {
+            if (key.startsWith('sac-desk-pwa') && key !== 'sac-desk-pwa-v4') {
+              caches.delete(key);
+            }
+          });
+        }).catch(() => {});
+      }
+
+      // Re-registrazione forzata Service Worker ('./sw.js', scope './', updateViaCache: 'none')
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js', { scope: './' })
+          navigator.serviceWorker.register('./sw.js', { scope: './', updateViaCache: 'none' })
             .then((registration) => {
-              console.log('S.A.C. Desk PWA Service Worker registrato con successo, scope:', registration.scope);
+              console.log('S.A.C. Desk PWA Service Worker v4 registrato con successo, scope:', registration.scope);
+
+              // Forza controllo immediato di eventuali aggiornamenti del Service Worker
+              registration.update().catch(() => {});
+
+              if (registration.waiting) {
+                registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+              }
 
               registration.addEventListener('updatefound', () => {
                 const installingWorker = registration.installing;
                 if (installingWorker) {
                   installingWorker.addEventListener('statechange', () => {
                     if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                      console.log('Nuova versione S.A.C. Desk pronta in background.');
+                      console.log('Nuova versione S.A.C. Desk v4 pronta: attivazione immediata.');
                       installingWorker.postMessage({ type: 'SKIP_WAITING' });
                     }
                   });
@@ -7996,7 +8015,7 @@ Disposizioni operative del Programma Nazionale di Sicurezza (PNS ENAC) e discipl
                     id="login-tia" 
                     required 
                     placeholder="Es. 90001 o 11509" 
-                    value="${AppState.currentTia ? (AppState.currentTia.replace(/^TIA-/i, '') || AppState.currentTia) : '90001'}"
+                    value="${safeGetItem(DB_KEYS.CURRENT_TIA) ? safeGetItem(DB_KEYS.CURRENT_TIA).replace(/^TIA-/i, '') : ''}"
                     oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                     class="w-full bg-[#0d1721] border border-aero-border rounded-xl px-3.5 py-2.5 text-sm text-slate-100 font-mono focus:outline-none focus:border-sky-500 transition"
                   />
@@ -8016,7 +8035,7 @@ Disposizioni operative del Programma Nazionale di Sicurezza (PNS ENAC) e discipl
                   id="login-password" 
                   required 
                   placeholder="Inserisci password alfanumerica..." 
-                  value="123"
+                  value=""
                   class="w-full bg-[#0d1721] border border-aero-border rounded-xl px-3.5 py-2.5 text-sm text-slate-100 font-mono focus:outline-none focus:border-sky-500 transition"
                 />
                 <div class="text-[10px] text-slate-500 font-mono mt-0.5">Supporta qualsiasi combinazione alfanumerica (maiuscole, minuscole, numeri e simboli)</div>
@@ -8040,59 +8059,6 @@ Disposizioni operative del Programma Nazionale di Sicurezza (PNS ENAC) e discipl
                 </button>
               </div>
             </form>
-
-            <!-- Preloaded Test Credentials Quick Access -->
-            <div class="mt-5 pt-3.5 border-t border-aero-border">
-              <div class="text-[11px] font-mono text-slate-400 mb-2 text-center uppercase tracking-wider">Accesso Rapido Account di Test:</div>
-              <div class="space-y-2">
-                <button 
-                  type="button" 
-                  onclick="quickLogin('90001', '123')"
-                  class="w-full p-2.5 bg-[#0d1721] hover:bg-sky-950/60 border border-amber-500/40 rounded-xl flex items-center justify-between text-left transition group cursor-pointer"
-                >
-                  <div class="flex items-center space-x-2.5">
-                    <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
-                    <div>
-                      <div class="text-xs font-bold text-white group-hover:text-amber-300">ADMIN: Vincenzo Bellini</div>
-                      <div class="text-[10px] font-mono text-slate-400">Numero TIA: <strong class="text-slate-200">90001</strong> | Pwd: <strong class="text-slate-200">123</strong></div>
-                    </div>
-                  </div>
-                  <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-500/20 text-amber-300 font-bold">ACCEDI ADMIN</span>
-                </button>
-
-                <button 
-                  type="button" 
-                  onclick="quickLogin('10045', '123')"
-                  class="w-full p-2.5 bg-[#0d1721] hover:bg-sky-950/60 border border-sky-500/40 rounded-xl flex items-center justify-between text-left transition group cursor-pointer"
-                >
-                  <div class="flex items-center space-x-2.5">
-                    <span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>
-                    <div>
-                      <div class="text-xs font-bold text-white group-hover:text-sky-300">OPERATORE: Marco Esposito</div>
-                      <div class="text-[10px] font-mono text-slate-400">Numero TIA: <strong class="text-slate-200">10045</strong> | Pwd: <strong class="text-slate-200">123</strong></div>
-                    </div>
-                  </div>
-                  <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-sky-500/20 text-sky-300 font-bold">ACCEDI OPERATORE</span>
-                </button>
-
-                <button 
-                  type="button" 
-                  onclick="quickLogin('14022', '123')"
-                  class="w-full p-2.5 bg-[#0d1721] hover:bg-purple-950/60 border border-purple-500/40 rounded-xl flex items-center justify-between text-left transition group cursor-pointer"
-                  title="Test login con account in attesa di approvazione Admin (verifica blocco accesso)"
-                >
-                  <div class="flex items-center space-x-2.5">
-                    <span class="w-2.5 h-2.5 rounded-full bg-purple-400 animate-pulse"></span>
-                    <div>
-                      <div class="text-xs font-bold text-white group-hover:text-purple-300">TEST STATO PENDING: Davide Moretti</div>
-                      <div class="text-[10px] font-mono text-slate-400">Numero TIA: <strong class="text-slate-200">14022</strong> | Pwd: <strong class="text-slate-200">123</strong></div>
-                    </div>
-                  </div>
-                  <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-purple-500/20 text-purple-300 font-bold">STATO PENDING</span>
-                </button>
-              </div>
-            </div>
-
           </div>
         </div>
       `;
@@ -11528,9 +11494,10 @@ Disposizioni operative del Programma Nazionale di Sicurezza (PNS ENAC) e discipl
       }
     };
 
-    // Capture PWA Install Prompt
+    // Capture PWA Install Prompt (nuovo ID /SAC-Desk/v2 forza nuova installabilità pulita)
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
+      safeSetItem('SAC_PWA_INSTALLED', 'false');
       AppState.pwaDeferredPrompt = e;
       renderApp();
     });

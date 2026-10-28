@@ -1,9 +1,9 @@
 {
-  "id": "./",
+  "id": "/SAC-Desk/v2",
   "name": "S.A.C. Desk - Airport Security",
   "short_name": "SAC Desk",
   "description": "S.A.C. Desk (Security Airport Control) - Controllo operativo sicurezza aeroportuale, gestione timbrature e varchi, registro criticità e archivio TOP SECRET.",
-  "start_url": "./",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#0f172a",
