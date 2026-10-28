@@ -5340,6 +5340,7 @@
           showToast("Accesso riservato a Supervisori, Coordinatori e Amministratori (Livello 2+).", "error");
           return;
         }
+        const currentLevel = getUserSecurityLevel(currentUser);
 
         this._personnelModalOpen = true;
         this._openedFromPersonnel = true;
@@ -5392,7 +5393,6 @@
             `;
           }
 
-          const currentLevel = getUserSecurityLevel(currentUser);
           const isSuper = isSuperAdmin(currentUser);
 
           return users.map(u => {
