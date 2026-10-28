@@ -1,16 +1,15 @@
-// S.A.C. Desk PWA Service Worker - Clean Registration & Cache Purge (v5)
-const CACHE_NAME = 'sac-desk-pwa-v5';
+// S.A.C. Desk PWA Service Worker - WebAPK Generation & Cache Purge (v6)
+const CACHE_NAME = 'sac-desk-pwa-v6';
 const CACHE_PREFIX = 'sac-desk-pwa';
 
 const PRECACHE_ASSETS = [
   './',
+  './?utm_source=pwa',
   './index.html',
-  './index.html?v=3',
   './manifest.json',
   './sac-logo.svg',
   './icon-192.png',
   './icon-512.png',
-  './icon-maskable-512.png',
   './apple-touch-icon.png',
   './favicon.png'
 ];
@@ -75,7 +74,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Always prefer fresh manifest.json from network so Chrome/Android immediately sees updated id "/SAC-Desk/app-v3"
+  // Always prefer fresh manifest.json from network so Chrome/Android immediately sees updated id "/SAC-Desk/webapk-v1"
   if (url.pathname.endsWith('/manifest.json')) {
     event.respondWith(
       fetch(event.request, { cache: 'reload' })
@@ -151,7 +150,7 @@ self.addEventListener('fetch', (event) => {
 
         if (event.request.mode === 'navigate' || event.request.destination === 'document') {
           const fallback =
-            (await caches.match('./index.html?v=3')) ||
+            (await caches.match('./?utm_source=pwa')) ||
             (await caches.match('./index.html')) ||
             (await caches.match('./'));
           if (fallback) {

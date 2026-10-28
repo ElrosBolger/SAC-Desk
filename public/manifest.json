@@ -1,14 +1,14 @@
 {
-  "id": "/SAC-Desk/app-v3",
+  "id": "/SAC-Desk/webapk-v1",
   "name": "S.A.C. Desk - Airport Security",
   "short_name": "SAC Desk",
   "description": "S.A.C. Desk (Security Airport Control) - Controllo operativo sicurezza aeroportuale, gestione timbrature e varchi, registro criticità e archivio TOP SECRET.",
-  "start_url": "./index.html?v=3",
-  "scope": "./",
+  "start_url": "/SAC-Desk/?utm_source=pwa",
+  "scope": "/SAC-Desk/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
-  "orientation": "any",
   "icons": [
     {
       "src": "./icon-192.png",
@@ -29,16 +29,10 @@
       "purpose": "maskable"
     },
     {
-      "src": "./icon-maskable-512.png",
+      "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
-    },
-    {
-      "src": "./sac-logo.svg",
-      "sizes": "192x192 512x512",
-      "type": "image/svg+xml",
-      "purpose": "any"
     }
   ]
 }
