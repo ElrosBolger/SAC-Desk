@@ -1,0 +1,6 @@
+{
+  "name": "S.A.C. Desk",
+  "description": "Security Airport Control Desk - Gestione operativa sicurezza aeroportuale, timbrature protette con password, incident reporting, archivio TOP SECRET e assistente RAG a contesto chiuso.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

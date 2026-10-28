@@ -1,0 +1,69 @@
+{
+  "entities": {
+    "Operator": {
+      "title": "Operator",
+      "description": "Airport security operator profile and credentials",
+      "type": "object",
+      "properties": {
+        "nome": { "type": "string" },
+        "cognome": { "type": "string" },
+        "matricolaTIA": { "type": "string" },
+        "ruolo": { "type": "string", "enum": ["operatore", "supervisore", "coordinatore", "superadmin", "admin"] },
+        "mansioni": { "type": "array" },
+        "certificazioniENAC": { "type": "object" },
+        "decretoPrefettura": { "type": "object" },
+        "statoAccount": { "type": "string", "enum": ["approvato", "in_attesa"] },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "station": { "type": "string" }
+      },
+      "required": ["matricolaTIA", "ruolo", "statoAccount"]
+    },
+    "ShiftPunch": {
+      "title": "ShiftPunch",
+      "description": "Guard shift punching record for security posts",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "tia": { "type": "string" },
+        "operatoreNome": { "type": "string" },
+        "postazione": { "type": "string" },
+        "timestampEntrata": { "type": "string" },
+        "timestampUscita": { "type": "string" },
+        "stato": { "type": "string", "enum": ["in_turno", "concluso", "in_pausa"] }
+      },
+      "required": ["id", "tia", "postazione", "timestampEntrata", "stato"]
+    },
+    "IncidentReport": {
+      "title": "IncidentReport",
+      "description": "Airport security incident report and official log",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "protocollo": { "type": "string" },
+        "priorita": { "type": "string", "enum": ["Critico", "Alta", "Normale", "CRITICA", "ALTA", "MEDIA", "BASSA"] },
+        "areaScalo": { "type": "string" },
+        "descrizione": { "type": "string" },
+        "redattoreTIA": { "type": "string" },
+        "redattoreNome": { "type": "string" },
+        "dataOra": { "type": "string" },
+        "stato": { "type": "string", "enum": ["aperto", "in_gestione", "chiuso", "ATTIVA", "RISOLTA", "ARCHIVIATA"] }
+      },
+      "required": ["id", "protocollo", "areaScalo", "descrizione", "redattoreTIA", "stato"]
+    }
+  },
+  "firestore": {
+    "/operators/{operatorId}": {
+      "schema": "Operator",
+      "description": "Registered airport operators collection indexed by TIA"
+    },
+    "/shifts_punches/{punchId}": {
+      "schema": "ShiftPunch",
+      "description": "Shift punch logs and guard station active presence"
+    },
+    "/incident_reports/{reportId}": {
+      "schema": "IncidentReport",
+      "description": "Registry of airport security anomalies and reports"
+    }
+  }
+}

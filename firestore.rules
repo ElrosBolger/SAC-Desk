@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Operators Collection: Indexed by TIA (e.g. TIA-90001)
+    match /operators/{operatorId} {
+      allow read: if true;
+      allow create, update: if isValidId(operatorId);
+      allow delete: if isValidId(operatorId);
+    }
+
+    // Shifts Punches Collection: Guard station presidio and punch records
+    match /shifts_punches/{punchId} {
+      allow read: if true;
+      allow create, update: if isValidId(punchId);
+      allow delete: if isValidId(punchId);
+    }
+
+    // Incident Reports Collection: Official security anomalies & logs
+    match /incident_reports/{reportId} {
+      allow read: if true;
+      allow create, update: if isValidId(reportId);
+      allow delete: if isValidId(reportId);
+    }
+
+    // Connectivity test path
+    match /test/{docId} {
+      allow read, write: if true;
+    }
+  }
+}

@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <clipPath id="circle-clip">
+      <circle cx="256" cy="256" r="236" />
+    </clipPath>
+  </defs>
+
+  <!-- Masked circle content -->
+  <g clip-path="url(#circle-clip)">
+    <!-- Sky blue background filling upper and middle portion -->
+    <circle cx="256" cy="256" r="236" fill="#24a8e0" />
+
+    <!-- Dark navy blue bottom section -->
+    <!-- Starts on the left edge around (100, 350), swoops down and right across the bottom -->
+    <path d="M 50 330 C 130 380, 200 440, 290 445 C 360 450, 410 415, 460 350 L 512 512 L 0 512 Z" fill="#1b287d" />
+
+    <!-- White Airplane & Streamline Swoosh -->
+    <!-- 
+      The white shape consists of:
+      1. Lower sweeping ribbon starting at the circle perimeter (~ x=62, y=348)
+      2. It curves smoothly to form the bottom contour of the airplane
+      3. Tail/stabilizer pointing down-left
+      4. Left wing pointing west with rounded tip (~ x=170, y=242)
+      5. Nose/cockpit pointing northeast (~ x=425, y=182)
+      6. Right wing pointing southeast (~ x=350, y=408)
+    -->
+    <path d="
+      M 64 345
+      C 118 375, 178 372, 230 350
+      C 270 332, 295 315, 310 295
+      L 346 398
+      C 353 410, 368 402, 362 390
+      L 348 285
+      L 426 182
+      C 434 172, 428 162, 416 166
+      L 326 250
+      L 182 232
+      C 170 230, 168 244, 178 250
+      L 278 288
+      C 230 330, 150 366, 64 345
+      Z
+    " fill="#ffffff" />
+  </g>
+</svg>
